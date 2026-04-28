@@ -150,7 +150,6 @@ activemq-data/
 *.sage.py
 
 # Environments
-.mini-rag-app/
 .env
 .envrc
 .venv
