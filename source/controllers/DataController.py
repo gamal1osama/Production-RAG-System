@@ -37,7 +37,7 @@ class DataController(BaseController):
             random_key = self.generate_random_string()
             new_file_path = os.path.join(project_path, f"{random_key}_{cleaned_filename}")
 
-        return new_file_path
+        return new_file_path, random_key+"_"+cleaned_filename
 
         
     def get_clean_filename(self, original_filename: str) -> str:
