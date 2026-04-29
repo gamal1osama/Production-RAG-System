@@ -5,6 +5,7 @@ from models import ProcessingEnums
 import os
 
 from langchain_community.document_loaders import TextLoader, PyMuPDFLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
 class ProcessController(BaseController):
@@ -35,3 +36,15 @@ class ProcessController(BaseController):
         loader = self.get_file_loader(file_id)
 
         return loader.load()
+    
+    def split_file_content(self, file_content: list,
+                           chunk_size: int = 100, chunk_overlap: int = 20):
+        
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+
+        file_content_text = [content.page_content for content in file_content]
+        file_content_metadata = [content.metadata for content in file_content]
+
+        chunks = text_splitter.create_documents(file_content_text, metadatas=file_content_metadata)
+
+        return chunks
