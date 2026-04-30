@@ -1,15 +1,26 @@
 services:
   mongodb:
     image: mongo:latest 
+
     container_name: mongodb
-    user: "${UID:-1000}:${GID:-1000}"
+
     ports:
       - "27017:27017"
+
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+    
     volumes:
-      - ./mongodb:/data/db
+      - mongodb:/data/db
+
     networks:
       - backend
+
     restart: always
 
 networks:
   backend:
+
+volumes:
+  mongodb:
