@@ -2,7 +2,7 @@ services:
   mongodb:
     image: mongo:latest 
     container_name: mongodb
-    user: "${UID}:${GID}"
+    user: "${UID:-1000}:${GID:-1000}"
     ports:
       - "27017:27017"
     volumes:
