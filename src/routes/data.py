@@ -107,7 +107,7 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
         ) for index, chunk in enumerate(chunks, start=1)
     ]
 
-    chunk_model = ChunkModel(db_client=request.app.db_client)
+    chunk_model = await ChunkModel.create_instance(db_client=request.app.db_client)
 
     if do_reset==1:
         await chunk_model.delete_chunks_by_project_id(project_id=project.id)
