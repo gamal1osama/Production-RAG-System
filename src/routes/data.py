@@ -4,8 +4,9 @@ import logging
 
 from helpers.config import get_settings, Settings
 from controllers import DataController, ProcessController
-from models import ResponseSignal, ProjectModel, ChunkModel
-from models.db_schemas import DataChunk
+from models import ResponseSignal, ProjectModel, ChunkModel, AssetModel
+from models.db_schemas import DataChunk, Asset
+from models.enums import AssetTypeEnum
 from .schemas.data import ProcessRequest
 
 from fastapi import FastAPI, APIRouter, Depends, UploadFile, status, Request
@@ -59,12 +60,26 @@ async def upload_data(request: Request, project_id: str, file: UploadFile,
                 "signal":ResponseSignal.FILE_UPLOAD_FAILED.value,
             }
         )
+    
+
+
+    # store the assets into the database
+    asset_model = await AssetModel.create_instance(db_client=request.app.db_client)
+
+    asset_resource = Asset(
+        asset_project_id = project.id,
+        asset_type=AssetTypeEnum.FILE.value,
+        asset_name=file_id,
+        asset_size=os.path.getsize(file_path)
+    )
+
+    assert_record = await asset_model.create_asset(asset=asset_resource)
 
     return JSONResponse(
         status_code=status.HTTP_200_OK, # that is the default U can delete it
         content={
             "signal":ResponseSignal.FILE_UPLOADED_SUCCESSFULLY.value,
-            "file_id": file_id
+            "file_id": str(assert_record.id),
         }
     )
 
