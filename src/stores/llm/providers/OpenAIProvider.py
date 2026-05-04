@@ -56,7 +56,7 @@ class OpenAIProvider(LLMInterface):
         
 
 
-        max_output_tokens = max_output_tokens if max_output_tokens else self.default_output_max_tokens,
+        max_output_tokens = max_output_tokens if max_output_tokens else self.default_output_max_tokens
         temperature = temperature if temperature else self.default_temperature
         chat_history.append(
             self.construct_prompt(prompt, role=OpenAIEnums.USER.value)
