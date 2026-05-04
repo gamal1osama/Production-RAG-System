@@ -55,7 +55,7 @@ class CohereProvider(LLMInterface):
         
 
 
-        max_output_tokens = max_output_tokens if max_output_tokens else self.default_output_max_tokens,
+        max_output_tokens = max_output_tokens if max_output_tokens else self.default_output_max_tokens
         temperature = temperature if temperature else self.default_temperature
 
         response = self.client.chat(
