@@ -44,7 +44,8 @@ class OpenAIProvider(LLMInterface):
 
 
     def generate_text(self, prompt: str, chat_history: list=[], 
-                      max_output_tokens: int=None, temperature: float=None) -> str:        
+                      max_output_tokens: int=None, temperature: float=None) -> str:  
+              
         if not self.client:
             self.logger.error("OpenAI client is not initialized.")
             return None
