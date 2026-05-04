@@ -87,7 +87,7 @@ class OpenAIProvider(LLMInterface):
             return None
         
         response = self.client.embeddings.create(
-            input=text,
+            input=self.process_text(text),
             model=self.embedding_model_id,
             dimensions=self.embedding_size
         )
