@@ -1,0 +1,154 @@
+from qdrant_client import QdrantClient, models
+
+from ..VectorDBInterface import VectorDBInterface
+from ..VectoDBEnums import DistanceMethodEnums
+
+import logging
+from typing import List
+
+
+
+class QdrantDBProvider(VectorDBInterface):
+
+    def __init__(self, db_path: str, distance_method: str):
+        
+        self.db_path = db_path
+        self.distance_method = None
+        self.client = None
+
+        if distance_method == DistanceMethodEnums.COSINE.value:
+            self.distance_method = models.Distance.COSINE
+        elif distance_method == DistanceMethodEnums.DOT.value:
+            self.distance_method = models.Distance.DOT
+
+        self.logger = logging.getLogger(__name__)
+
+
+    def connect(self):
+        self.client = QdrantClient(path=self.db_path)
+    
+    def disconnect(self):
+        self.client = None
+
+    
+    def is_collection_exists(self, collection_name: str) -> bool:
+        return self.client.collection_exists(collection_name=collection_name)
+    
+
+    def list_all_collections(self) -> List:
+        return self.client.get_collections()
+    
+
+    def get_collection_info(self, collection_name: str) -> dict:
+        return self.client.get_collection(collection_name=collection_name)
+    
+
+    def delete_collection(self, collection_name: str):
+        if self.is_collection_exists(collection_name):
+            return self.client.delete_collection(collection_name=collection_name)
+        
+    def create_collection(self, collection_name: str, 
+                          embedding_size: int, 
+                          do_reset: bool = False) -> bool:
+        if do_reset:
+            _ = self.delete_collection(collection_name)
+        
+        if not self.is_collection_exists(collection_name):
+            _ = self.client.recreate_collection(
+                collection_name=collection_name,
+                vectors_config=models.VectorParams(size=embedding_size, distance=self.distance_method)
+            )
+
+            return True
+        
+        return False
+    
+
+    def insert_one(self, collection_name: str,
+                   text: str, 
+                   vector: List[float], 
+                   metadata: dict = None,
+                   record_id: str = None) -> bool:
+
+        if not self.is_collection_exists(collection_name):
+            self.logger.error("Can't insert to non-existing collection!")
+            return False
+        
+        try:
+            _ = self.client.upsert(
+                collection_name=collection_name,
+                points=[
+                    models.PointStruct(
+                        id=record_id,
+                        vector=vector,
+                        payload={
+                            "text": text,
+                            "metadata":metadata
+                        }
+                    )
+                ]
+            )
+        except Exception as e:
+            self.logger.error(f"Error occurred while inserting: {e}")
+            return False
+
+        return True
+    
+
+    def insert_many(self, collection_name: str,
+                    texts: List[str], 
+                    vectors: List[List[float]], 
+                    metadatas: List[dict] = None,
+                    record_ids: List[str] = None,
+                    batch_size: int = 64) -> bool:
+        
+        if metadatas is None:
+            metadatas = [None] * len(texts)
+
+        if record_ids is None:
+            record_ids = [None] * len(texts)
+
+        
+        for i in range(0, len(texts), batch_size):
+            batch_texts = texts[i:i+batch_size]
+            batch_vectors = vectors[i:i+batch_size]
+            batch_metadatas = metadatas[i:i+batch_size]
+            batch_record_ids = record_ids[i:i+batch_size]
+
+            points = [
+                models.PointStruct(
+                    id=record_id,
+                    vector=vector,
+                    payload={
+                        "text": text,
+                        "metadata":metadata
+                    }
+                )
+                for text, vector, metadata, record_id in zip(batch_texts, batch_vectors, batch_metadatas, batch_record_ids)
+            ]
+
+            try:
+                _ = self.client.upsert(
+                    collection_name=collection_name,
+                    points=points
+                )
+            except Exception as e:
+                self.logger.error(f"Error occurred while inserting batch: {e}")
+                raise e
+
+        return True
+    
+
+    def search_by_vector(self, collection_name: str,
+                         query_vector: List[float], 
+                         limit: int = 10) -> List[dict]:
+        if not self.is_collection_exists(collection_name):
+            self.logger.error("Can't search in non-existing collection!")
+            return []
+
+        return self.client.query_points(
+            collection_name=collection_name,
+            query=query_vector,
+            limit=limit
+        )
+
