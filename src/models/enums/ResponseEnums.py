@@ -18,3 +18,9 @@ class ResponseSignal(Enum):
     NO_FILES_TO_PROCESS_ERROR = "no_files_to_process_error"
 
     FILE_WITH_THIS_ID_NOT_FOUND_ERROR = "file_with_this_id_not_found_error"
+
+    PROJECT_NOT_FOUND = "project_not_found"
+
+    INSERTING_CHUNKS_INTO_DB_FAILED = "inserting_chunks_into_db_failed"
+    INSERTING_CHUNKS_INTO_DB_SUCCESS = "inserting_chunks_into_db_success"
+    
