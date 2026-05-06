@@ -2,8 +2,8 @@ from fastapi import FastAPI, APIRouter, Request, status
 from fastapi.responses import JSONResponse
 
 from .schemas.nlp import PushRequest
-from ..models import ProjectModel, ChunkModel, ResponseSignal
-from ..controllers import NLPController
+from models import ProjectModel, ChunkModel, ResponseSignal
+from controllers import NLPController
 
 import logging
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 nlp_router = APIRouter(
-    prefix="api/v1/nlp", 
+    prefix="/api/v1/nlp", 
     tags=["api_v1", "nlp"]
 )
 
