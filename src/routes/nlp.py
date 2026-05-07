@@ -42,7 +42,8 @@ async def index_project(project_id: str, request: Request, push_request: PushReq
     nlp_controller = NLPController(
         vector_db_client=request.app.vector_db_client,
         generation_client=request.app.generation_client,
-        embedding_client=request.app.embedding_client
+        embedding_client=request.app.embedding_client,
+        template_parser=request.app.template_parser
     )
 
 
@@ -101,7 +102,8 @@ async def get_project_index_info(project_id: str, request: Request):
     nlp_controller = NLPController(
         vector_db_client=request.app.vector_db_client,
         generation_client=request.app.generation_client,
-        embedding_client=request.app.embedding_client
+        embedding_client=request.app.embedding_client,
+        template_parser=request.app.template_parser
     )    
 
 
@@ -125,7 +127,8 @@ async def search_index(project_id: str, request: Request, search_request: Search
     nlp_controller = NLPController(
         vector_db_client=request.app.vector_db_client,
         generation_client=request.app.generation_client,
-        embedding_client=request.app.embedding_client
+        embedding_client=request.app.embedding_client,
+        template_parser=request.app.template_parser
     )    
 
     results = nlp_controller.search_vector_db_collection(
