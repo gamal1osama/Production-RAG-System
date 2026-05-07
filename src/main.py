@@ -4,6 +4,7 @@ from routes import base, data, nlp
 from helpers.config import get_settings
 from stores.llm import LLMProviderFactory
 from stores.vectordb import VectorDBProviderFactory
+from stores.llm.templates import TemplateParser
 
 from motor.motor_asyncio import AsyncIOMotorClient
 
@@ -38,6 +39,9 @@ async def startup_span():
     # vector db client
     app.vector_db_client = vector_db_provider_factory.create(provider=settings.VECTOR_DB_BACKEND)
     app.vector_db_client.connect()
+
+    # template parser
+    app.template_parser = TemplateParser(language=settings.PRIMARY_LANGUAGE, default_language=settings.DEFAULT_LANGUAGE)
 
 
 
