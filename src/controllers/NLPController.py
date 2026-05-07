@@ -145,7 +145,7 @@ class NLPController(BaseController):
         ])
 
         # step3: call generation client (LLM) to get the answer
-        answer = self.generation_client.generate(
+        answer = self.generation_client.generate_text(
             prompt=full_prompt,
             chat_history=chat_history
         )
