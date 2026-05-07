@@ -31,6 +31,8 @@ class OpenAIProvider(LLMInterface):
 
         self.logger = logging.getLogger(__name__)
 
+        self.enums = OpenAIEnums
+        
 
 
 
