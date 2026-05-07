@@ -9,12 +9,13 @@ import json
 
 class NLPController(BaseController):
 
-    def __init__(self, vector_db_client, generation_client, embedding_client):
+    def __init__(self, vector_db_client, generation_client, embedding_client, template_parser):
         super().__init__()
 
         self.vector_db_client = vector_db_client
         self.generation_client = generation_client
         self.embedding_client = embedding_client
+        self.template_parser = template_parser
 
     
     def create_collection_name(self, project_id: str) -> str:
@@ -108,15 +109,44 @@ class NLPController(BaseController):
         )
 
         if not retrieved_chunks:
-            return None
+            return None, None, None
 
 
         # step2: construct prompt for generation client (LLM)
-        system_prompt = """
-            You are an assistant to generate a response for the user.
+        system_prompt = self.template_parser.get_prompts(group="rag", key="system_prompt")
 
-            You will be provided by a set of documents associated with the user's query.
+        document_prompts = "\n".join([
+            self.template_parser.get_prompts(
+                group="rag",
+                key="document_prompt",
+                vars={
+                    "doc_number": idx,
+                    "doc_content": chunk.text
+                }
+            )
+            for idx, chunk in enumerate(retrieved_chunks, 1)
+        ])
 
-            You have to generate a response based on the documents provided. Ignore the documents that are not relevant to the user's query.    
-        
-        """
+        footer_prompt = self.template_parser.get_prompts(group="rag", key="footer_prompt")
+
+
+        chat_history = [
+            self.generation_client.construct_prompt(
+                prompt=system_prompt, 
+                role=self.generation_client.enums.SYSTEM.value
+            )
+        ]
+
+        full_prompt = "\n\n".join([
+            document_prompts,
+            footer_prompt
+        ])
+
+        # step3: call generation client (LLM) to get the answer
+        answer = self.generation_client.generate(
+            prompt=full_prompt,
+            chat_history=chat_history
+        )
+
+        return answer, full_prompt, chat_history
+    
