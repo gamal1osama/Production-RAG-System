@@ -100,6 +100,8 @@ class NLPController(BaseController):
 
 
     def answer_rag_query(self, project: Project, query: str, limit: int = 10):
+
+        answer, full_prompt, chat_history = None, None, None
         
         # step1: retrieve related chunks from vector db
         retrieved_chunks = self.search_vector_db_collection(
@@ -109,7 +111,7 @@ class NLPController(BaseController):
         )
 
         if not retrieved_chunks:
-            return None, None, None
+            return answer, full_prompt, chat_history
 
 
         # step2: construct prompt for generation client (LLM)
