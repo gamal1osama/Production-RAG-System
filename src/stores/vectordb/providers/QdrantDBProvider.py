@@ -157,10 +157,14 @@ class QdrantDBProvider(VectorDBInterface):
         if not self.is_collection_exists(collection_name):
             self.logger.error("Can't search in non-existing collection!")
             return []
+        
 
-        return self.client.query_points(
+
+        results = self.client.query_points(
             collection_name=collection_name,
             query=query_vector,
             limit=limit
         )
+        
+        return results.points
 
