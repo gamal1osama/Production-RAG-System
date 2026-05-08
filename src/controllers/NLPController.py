@@ -129,7 +129,13 @@ class NLPController(BaseController):
             for idx, chunk in enumerate(retrieved_chunks, 1)
         ])
 
-        footer_prompt = self.template_parser.get_prompts(group="rag", key="footer_prompt")
+        footer_prompt = self.template_parser.get_prompts(
+            group="rag",
+            key="footer_prompt",
+            vars={
+                "query": query
+            }
+        )
 
 
         chat_history = [
