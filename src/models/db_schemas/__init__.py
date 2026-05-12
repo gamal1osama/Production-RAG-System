@@ -1,1 +1,1 @@
-from minirag.schemas import Asset, Project, DataChunk, RetrievedDataChunk
+from .minirag.schemas import Asset, Project, DataChunk, RetrievedDataChunk
