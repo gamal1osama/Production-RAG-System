@@ -67,19 +67,19 @@ async def upload_data(request: Request, project_id: int, file: UploadFile,
     asset_model = await AssetModel.create_instance(db_client=request.app.db_client)
 
     asset_resource = Asset(
-        asset_project_id = project.id,
+        asset_project_id = project.project_id,
         asset_type=AssetTypeEnum.FILE.value,
         asset_name=file_id,
         asset_size=os.path.getsize(file_path)
     )
 
-    assert_record = await asset_model.create_asset(asset=asset_resource)
+    asset_record = await asset_model.create_asset(asset=asset_resource)
 
     return JSONResponse(
         status_code=status.HTTP_200_OK, # that is the default U can delete it
         content={
             "signal":ResponseSignal.FILE_UPLOADED_SUCCESSFULLY.value,
-            "file_id": str(assert_record.id),
+            "file_id": str(asset_record.asset_id),
         }
     )
 
@@ -101,7 +101,7 @@ async def process_endpoint(request: Request, project_id: int, process_request: P
 
     if process_request.file_id is not None:
         asset_record = await asset_model.get_asset_record(
-            asset_project_id=project.id, asset_name=process_request.file_id
+            asset_project_id=project.project_id, asset_name=process_request.file_id
         )
 
         if asset_record is None:
@@ -113,15 +113,15 @@ async def process_endpoint(request: Request, project_id: int, process_request: P
             )
         
         project_files_ids = {
-            asset_record.id : asset_record.asset_name
+            asset_record.asset_id : asset_record.asset_name
         }
 
 
     else:
-        project_assets = await asset_model.get_all_project_assets(asset_project_id=project.id, asset_type=AssetTypeEnum.FILE.value)
+        project_assets = await asset_model.get_all_project_assets(asset_project_id=project.project_id, asset_type=AssetTypeEnum.FILE.value)
         
         project_files_ids = {
-            asset.id : str(asset.asset_name) for asset in project_assets
+            asset.asset_id : str(asset.asset_name) for asset in project_assets
             }
 
 
@@ -143,7 +143,7 @@ async def process_endpoint(request: Request, project_id: int, process_request: P
     chunk_model = await ChunkModel.create_instance(db_client=request.app.db_client)
 
     if do_reset==1:
-        await chunk_model.delete_chunks_by_project_id(project_id=project.id)
+        await chunk_model.delete_chunks_by_project_id(project_id=project.project_id)
 
 
     no_records, no_files = 0, 0
@@ -170,7 +170,7 @@ async def process_endpoint(request: Request, project_id: int, process_request: P
                 chunk_text=chunk.page_content,
                 chunk_metadata=chunk.metadata,
                 chunk_order=index,
-                chunk_project_id=project.id,
+                chunk_project_id=project.project_id,
                 chunk_asset_id=asset_id
             ) for index, chunk in enumerate(chunks, start=1)
         ]
