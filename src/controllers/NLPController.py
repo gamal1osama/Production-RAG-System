@@ -123,7 +123,7 @@ class NLPController(BaseController):
                 key="document_prompt",
                 vars={
                     "doc_number": idx,
-                    "doc_content": chunk.text
+                    "doc_content": self.generation_client.process_text(chunk.text)
                 }
             )
             for idx, chunk in enumerate(retrieved_chunks, 1)
