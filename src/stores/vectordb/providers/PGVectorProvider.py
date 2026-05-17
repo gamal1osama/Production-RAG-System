@@ -16,14 +16,19 @@ class PGVectorProvider(VectorDBInterface):
 
         self.db_client = db_client
         self.default_vector_size = default_vector_size
-        self.distance_method = distance_method
+        self.distance_method = None
         self.index_threshold = index_threshold
 
         self.pgvector_table_prefix = PgVectorTableScemaEnums._PREFIX.value
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("uvicorn.error")
 
         self.default_index_name = lambda collection_name: f"{collection_name}_vector_idx"
+
+        if distance_method == DistanceMethodEnums.COSINE.value:
+            self.distance_method = PgVectorDistanceMethodEnums.COSINE.value
+        elif distance_method == DistanceMethodEnums.DOT.value:
+            self.distance_method = PgVectorDistanceMethodEnums.DOT.value
 
 
     async def connect(self):
@@ -149,6 +154,9 @@ class PGVectorProvider(VectorDBInterface):
         if not await self.is_collection_exists(collection_name):
             self.logger.error(f"Collection (table) {collection_name} does not exist. Cannot create index.")
             return False
+
+        if await self.is_index_existed(collection_name):
+            return True
         
         async with self.db_client() as session:
             async with session.begin():
