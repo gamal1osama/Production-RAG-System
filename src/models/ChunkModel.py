@@ -81,7 +81,7 @@ class ChunkModel(BaseDataModel):
 
         async with self.db_client() as session:
             async with session.begin():
-                stmt = select(func.count(DataChunk)).where(DataChunk.chunk_project_id == project_id)
+                stmt = select(func.count(DataChunk.chunk_id)).where(DataChunk.chunk_project_id == project_id)
                 result = await session.execute(stmt)
                 total_count = result.scalar_one()
 
