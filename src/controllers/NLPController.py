@@ -46,7 +46,7 @@ class NLPController(BaseController):
         texts = [chunk.chunk_text for chunk in chunks]
         metadatas = [chunk.chunk_metadata for chunk in chunks]
 
-        vectors =  await self.embedding_client.embed_text(text=texts, document_type=DocumentTypeEnums.DOCUMENT.value) 
+        vectors =  self.embedding_client.embed_text(text=texts, document_type=DocumentTypeEnums.DOCUMENT.value) 
 
 
         # step 3: create collection if not exists
