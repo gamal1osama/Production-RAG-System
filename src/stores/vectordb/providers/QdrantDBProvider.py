@@ -48,6 +48,7 @@ class QdrantDBProvider(VectorDBInterface):
 
     async def delete_collection(self, collection_name: str):
         if await self.is_collection_exists(collection_name):
+            self.logger.info(f"Deleting existing Qdrant collection {collection_name}...")
             return self.client.delete_collection(collection_name=collection_name)
         
     async def create_collection(self, collection_name: str, 
