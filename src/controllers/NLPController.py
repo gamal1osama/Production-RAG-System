@@ -2,6 +2,8 @@ from .BaseController import BaseController
 from stores.llm.LLMEnums import DocumentTypeEnums
 from models.db_schemas import Project, DataChunk
 from typing import List
+import asyncio
+from cohere.errors import TooManyRequestsError
 import json
 
 
@@ -19,24 +21,24 @@ class NLPController(BaseController):
 
     
     def create_collection_name(self, project_id: str) -> str:
-        return f"collection_{project_id}".strip()
+        return f"collection_{self.vector_db_client.default_vector_size}_{project_id}".strip()
     
 
-    def reset_vector_db_collection(self, project: Project):
+    async def reset_vector_db_collection(self, project: Project):
         collection_name = self.create_collection_name(project_id=project.project_id)
-        return self.vector_db_client.delete_collection(collection_name=collection_name)
+        return await self.vector_db_client.delete_collection(collection_name=collection_name)
         
 
-    def get_vector_db_collection_info(self, project: Project):
+    async def get_vector_db_collection_info(self, project: Project):
         collection_name = self.create_collection_name(project_id=project.project_id)
-        collection_info = self.vector_db_client.get_collection_info(collection_name=collection_name)
+        collection_info = await self.vector_db_client.get_collection_info(collection_name=collection_name)
 
         return json.loads( # that usually solves the issue of non-serializable objects in the response (we actually get the error when we try to return the collection_info object in the response, so we convert it to json string and then parse it back to dict
             json.dumps(collection_info, default=lambda x: x.__dict__)
         )
         
 
-    def index_into_db(self, project: Project, chunks: List[DataChunk], do_reset: bool = False, chunks_ids: List[str] = None) -> bool:
+    async def index_into_db(self, project: Project, chunks: List[DataChunk], do_reset: bool = False, chunks_ids: List[str] = None) -> bool:
         
         # step 1: get collection name
         collection_name = self.create_collection_name(project_id=project.project_id)
@@ -46,21 +48,23 @@ class NLPController(BaseController):
         texts = [chunk.chunk_text for chunk in chunks]
         metadatas = [chunk.chunk_metadata for chunk in chunks]
 
-        vectors = [
-            self.embedding_client.embed_text(text=text, document_type=DocumentTypeEnums.DOCUMENT.value) 
-            for text in texts
-        ]
+        while True:
+            try:
+                vectors = self.embedding_client.embed_text(text=texts, document_type=DocumentTypeEnums.DOCUMENT.value)
+                break
+            except TooManyRequestsError:
+                await asyncio.sleep(60)
 
 
         # step 3: create collection if not exists
-        _ = self.vector_db_client.create_collection(
+        _ = await self.vector_db_client.create_collection(
             collection_name=collection_name,
             embedding_size=self.embedding_client.embedding_size,
             do_reset=do_reset
         )
 
         # step 4: insert items into collection
-        _ = self.vector_db_client.insert_many(
+        _ = await self.vector_db_client.insert_many(
             collection_name=collection_name,
             texts=texts, 
             vectors=vectors, 
@@ -73,21 +77,31 @@ class NLPController(BaseController):
     
 
     
-    def search_vector_db_collection(self,
-                                    project: Project,
-                                    text: str,
-                                    limit: int = 10):
+    async def search_vector_db_collection(self,
+                                          project: Project,
+                                          text: str,
+                                          limit: int = 10):
 
         # step1: get collection name
         collection_name = self.create_collection_name(project_id=project.project_id)
+        query_vector = None
 
         # step2: get the text embedding vector
-        query_vector = self.embedding_client.embed_text(text=text, document_type=DocumentTypeEnums.QUERY.value)
+        while True:
+            try:
+                query_vectors = self.embedding_client.embed_text(text=text, document_type=DocumentTypeEnums.QUERY.value)
+                break
+            except TooManyRequestsError:
+                await asyncio.sleep(60)
+        
+        if isinstance(query_vectors, list) and len(query_vectors) > 0:
+            query_vector = query_vectors[0]
+    
         if not query_vector:
             return None
 
         # step3: do semantic search
-        search_results = self.vector_db_client.search_by_vector(
+        search_results = await self.vector_db_client.search_by_vector(
             collection_name=collection_name,
             query_vector=query_vector,
             limit=limit
@@ -99,12 +113,12 @@ class NLPController(BaseController):
         return search_results
 
 
-    def answer_rag_query(self, project: Project, query: str, limit: int = 10):
+    async def answer_rag_query(self, project: Project, query: str, limit: int = 10):
 
         answer, full_prompt, chat_history = None, None, None
         
         # step1: retrieve related chunks from vector db
-        retrieved_chunks = self.search_vector_db_collection(
+        retrieved_chunks = await self.search_vector_db_collection(
             project=project,
             text=query,
             limit=limit

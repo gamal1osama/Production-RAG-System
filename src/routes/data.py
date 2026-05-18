@@ -3,7 +3,7 @@ import aiofiles
 import logging
 
 from helpers.config import get_settings, Settings
-from controllers import DataController, ProcessController
+from controllers import DataController, ProcessController, NLPController
 from models import ResponseSignal, ProjectModel, ChunkModel, AssetModel
 from models.db_schemas import DataChunk, Asset
 from models.enums import AssetTypeEnum
@@ -94,7 +94,12 @@ async def process_endpoint(request: Request, project_id: int, process_request: P
     project_model = await ProjectModel.create_instance(db_client=request.app.db_client)
     project = await project_model.get_project_or_create(project_id=project_id)
 
-
+    nlp_controller = NLPController(
+        vector_db_client=request.app.vector_db_client,
+        generation_client=request.app.generation_client,
+        embedding_client=request.app.embedding_client,
+        template_parser=request.app.template_parser
+    )
 
     asset_model = await AssetModel.create_instance(db_client=request.app.db_client)
     project_files_ids = {}
@@ -143,6 +148,12 @@ async def process_endpoint(request: Request, project_id: int, process_request: P
     chunk_model = await ChunkModel.create_instance(db_client=request.app.db_client)
 
     if do_reset==1:
+        # delete the associated collection in the vector database
+        collection_name = nlp_controller.create_collection_name(project_id=project.project_id)
+
+        _ = await request.app.vector_db_client.delete_collection(collection_name=collection_name)
+
+        # delete the existing chunks in the database for this project
         await chunk_model.delete_chunks_by_project_id(project_id=project.project_id)
 
 

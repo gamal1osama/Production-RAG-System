@@ -3,6 +3,7 @@ from ..LLMEnums import OpenAIEnums
 
 from openai import OpenAI
 import logging
+from typing import Union, List
 
 
 
@@ -32,7 +33,7 @@ class OpenAIProvider(LLMInterface):
             base_url=self.base_url if (self.base_url and len(self.base_url)) else None
         )
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("uvicorn.error")
 
         self.enums = OpenAIEnums
         
@@ -81,7 +82,7 @@ class OpenAIProvider(LLMInterface):
         return response.choices[0].message.content
     
 
-    def embed_text(self, text: str, document_type: str=None) -> list:
+    def embed_text(self, text: Union[str, List[str]], document_type: str=None) -> list:
         
         if not self.client:
             self.logger.error("OpenAI client is not initialized.")
@@ -91,8 +92,11 @@ class OpenAIProvider(LLMInterface):
             self.logger.error("Embedding model ID is not set.")
             return None
         
+        if isinstance(text, str):
+            text = [text]
+
         response = self.client.embeddings.create(
-            input=self.process_text(text),
+            input=[self.process_text(t) for t in text],
             model=self.embedding_model_id,
             dimensions=self.embedding_size
         )
@@ -101,8 +105,7 @@ class OpenAIProvider(LLMInterface):
             self.logger.error("Error While fetching embedding from OpenAI API.")
             return None
         
-        return response.data[0].embedding
-    
+        return [d.embedding for d in response.data]
 
     def construct_prompt(self, prompt: str, role: str) -> str:
         return {

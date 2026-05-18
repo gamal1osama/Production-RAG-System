@@ -151,12 +151,21 @@ The project intentionally uses multiple patterns to make swapping services and r
 
 ---
 
-## Vector Database (Qdrant)
+## Vector Database (Qdrant and pgvector)
 
+**Qdrant (local path mode)**
 - Collection per project: `collection_{project_id}`.
 - Embedding size defined by config (e.g., 1024).
 - Records store: `text` + `metadata` + `score` returned by Qdrant.
 - Local persistence path: `assets/database/{VECTOR_DB_PATH}`.
+
+**pgvector (PostgreSQL extension)**
+- Uses the Postgres service and keeps vector data alongside relational data.
+- Ideal when you want a single database stack and simpler infra.
+
+**Simplest switch (env-driven):**
+- Set `VECTOR_DB_BACKEND` in your environment file to choose the backend.
+- No code changes required; the factories resolve the provider at startup.
 
 ---
 
@@ -176,6 +185,8 @@ The codebase is structured to make a database swap mostly a **model-layer change
 	- File handling, chunking, LLM calls, and vector search do not depend on the relational DB choice.
 
 **Note:** This repo still contains MongoDB references in Docker and dependencies. They are legacy artifacts and can be removed once you are fully confident in the Postgres path.
+
+The power of a strong software base (clean layering, interfaces, and factories) is what made the MongoDB -> PostgreSQL shift straightforward, and it now enables vector backend switching through the environment file without large refactors.
 
 ---
 

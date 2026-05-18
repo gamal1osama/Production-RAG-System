@@ -3,6 +3,7 @@ from ..LLMEnums import CohereEnums, DocumentTypeEnums
 
 import cohere
 import logging
+from typing import Union, List
 
 
 
@@ -28,7 +29,7 @@ class CohereProvider(LLMInterface):
 
         self.client = cohere.Client(api_key=self.api_key)
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("uvicorn.error")
 
         self.enums = CohereEnums
     
@@ -75,7 +76,7 @@ class CohereProvider(LLMInterface):
         return response.message.content[0].text
     
 
-    def embed_text(self, text: str, document_type: str=None) -> list:
+    def embed_text(self, text: Union[str, List[str]], document_type: str=None) -> list:
         
         if not self.client:
             self.logger.error("Cohere client is not initialized.")
@@ -85,6 +86,9 @@ class CohereProvider(LLMInterface):
             self.logger.error("Embedding model ID is not set.")
             return None
         
+        if isinstance(text, str):
+            text = [text]
+        
 
         input_type = None
         if document_type and document_type.lower() == "query":
@@ -93,7 +97,7 @@ class CohereProvider(LLMInterface):
             input_type = CohereEnums.DOCUMENT.value
         
         response = self.client.embed(
-            texts=[self.process_text(text)],
+            texts=[ self.process_text(t) for t in text ],
             model=self.embedding_model_id,
             input_type=input_type,
             embedding_types=['float']
@@ -103,7 +107,7 @@ class CohereProvider(LLMInterface):
             self.logger.error("Error While fetching embedding from Cohere API.")
             return None
 
-        return response.embeddings.float[0] 
+        return [ f for f in response.embeddings.float ]
     
 
 
