@@ -197,3 +197,18 @@ services:
 
     restart: always
 
+
+
+
+
+networks:
+  backend:
+    driver: bridge
+
+
+volumes:
+  pgvector_data:
+  qdrant_data:
+  prometheus_data:
+  grafana_data:
+
