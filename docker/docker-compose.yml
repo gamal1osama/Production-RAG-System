@@ -4,7 +4,7 @@ services:
   fastapi:
     build:
       context: ..
-      dockerfile: docker/minirag/Dockerfile
+      dockerfile: docker/ragsys/Dockerfile
 
     container_name: fastapi
 

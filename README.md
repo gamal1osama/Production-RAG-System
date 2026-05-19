@@ -1,6 +1,6 @@
-# MiniRAG
+# Rag App System 
 
-MiniRAG is a compact, production-minded Retrieval-Augmented Generation (RAG) service built with FastAPI. It supports document upload, chunking, vector indexing, semantic search, and answer generation using configurable LLM and vector backends.
+ Rag App System is a compact, production-minded Retrieval-Augmented Generation (RAG) service built with FastAPI. It supports document upload, chunking, vector indexing, semantic search, and answer generation using configurable LLM and vector backends.
 
 This README is intentionally long and explicit. It documents how each part of the codebase works, the project flow, technologies used, design patterns, and how the architecture supports a database migration with minimal refactoring.
 
@@ -44,7 +44,7 @@ src/
 - **[src/models/ProjectModel.py](src/models/ProjectModel.py)**: CRUD for projects.
 - **[src/models/AssetModel.py](src/models/AssetModel.py)**: file asset records.
 - **[src/models/ChunkModel.py](src/models/ChunkModel.py)**: chunk records + pagination.
-- **[src/models/db_schemas/minirag/schemas](src/models/db_schemas/minirag/schemas)**: SQLAlchemy tables.
+- **[src/models/db_schemas/ragsys/schemas](src/models/db_schemas/ragsys/schemas)**: SQLAlchemy tables.
 
 ### Stores (External Services)
 - **LLM providers:** OpenAI, Cohere via **[LLMProviderFactory](src/stores/llm/LLMProviderFactory.py)**.
@@ -214,13 +214,13 @@ If you only use Postgres, MongoDB can be disabled.
 Alembic lives under:
 
 ```
-src/models/db_schemas/minirag/
+src/models/db_schemas/ragsys/
 ```
 
 Quick start:
 
 ```bash
-cd src/models/db_schemas/minirag
+cd src/models/db_schemas/rsgys
 cp alembic.ini.example alembic.ini
 
 # edit alembic.ini to set sqlalchemy.url
@@ -233,7 +233,7 @@ Key points:
 - `alembic/env.py` loads `SQLAlchemyBase.metadata` for autogenerate.
 
 For the detailed Alembic workflow and troubleshooting notes, see
-[src/models/db_schemas/minirag/README.md](src/models/db_schemas/minirag/README.md).
+[src/models/db_schemas/ragsys/README.md](src/models/db_schemas/ragsys/README.md).
 
 ---
 

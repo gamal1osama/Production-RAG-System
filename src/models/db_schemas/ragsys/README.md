@@ -1,6 +1,6 @@
-# Alembic Usage (MiniRAG)
+# Alembic Usage (RAG App System)
 
-This folder contains the Alembic config and migration scripts for the MiniRAG database schema.
+This folder contains the Alembic config and migration scripts for the Rag App System database schema.
 
 This guide focuses on the exact workflow used in this repository and common recovery steps when
 Alembic autogenerate does not behave as expected.
@@ -41,7 +41,7 @@ The autogenerate step depends on `SQLAlchemyBase.metadata` being populated with 
 In this repo, that is wired in:
 
 ```
-src/models/db_schemas/minirag/alembic/env.py
+src/models/db_schemas/ragsys/alembic/env.py
 ```
 
 If you add a new model, make sure it is imported in the schema package so the metadata
@@ -56,7 +56,7 @@ alembic revision --autogenerate -m "add your change summary"
 Review the generated file under:
 
 ```
-src/models/db_schemas/minirag/alembic/versions/
+src/models/db_schemas/ragsys/alembic/versions/
 ```
 
 ### 4) Apply the migration
@@ -100,7 +100,7 @@ Possible causes:
 
 Fix:
 - Ensure the model file is imported in the schema package, then rerun autogenerate.
-- Run Alembic from `src/models/db_schemas/minirag`.
+- Run Alembic from `src/models/db_schemas/ragsys`.
 
 ### "Target database is not up to date"
 

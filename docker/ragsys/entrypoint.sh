@@ -2,7 +2,7 @@
 set -e
 
 echo "Running database migrations..."
-cd /app/models/db_schemas/minirag/
+cd /app/models/db_schemas/ragsys/
 alembic upgrade head
 cd /app
 
