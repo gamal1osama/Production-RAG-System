@@ -4,7 +4,7 @@ services:
   fastapi:
     build:
       context: ..
-      dockerfile: docker/ragapp/Dockerfile
+      dockerfile: docker/minirag/Dockerfile
 
     container_name: fastapi
 
@@ -59,9 +59,6 @@ services:
     volumes:
       - pgvector_data:/var/lib/postgresql
   
-    environment:
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-  
     env_file:
       - ./env/.env.postgres
   
@@ -71,7 +68,7 @@ services:
     restart: always
   
     healthcheck:
-      test: ["CMD_SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -150,7 +147,7 @@ services:
 
 
   # Node Exporter for system Metrics
-  node_exporter:
+  node-exporter:
 
     image: prom/node-exporter:v1.11.1
 
@@ -168,7 +165,7 @@ services:
       - '--path.procfs=/host/proc'
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-excluded=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
 
     networks:
       - backend
@@ -177,7 +174,7 @@ services:
 
 
   # PostgreSQL Exporter for Postgres Metrics
-  postgres_exporter:
+  postgres-exporter:
   
     image: prometheuscommunity/postgres-exporter:v0.19.1
   
