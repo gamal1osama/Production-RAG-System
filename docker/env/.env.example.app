@@ -1,0 +1,47 @@
+APP_NAME="mini-RAG"
+APP_VERSION="0.1"
+
+FILE_ALLOWED_TYPES=["text/plain", "application/pdf"]
+FILE_MAX_SIZE=10 # in MB
+FILE_DEFAULT_CHUNK_SIZE=512 # in KB
+
+#=============================PostgresDB Configuration=============================
+POSTGRES_HOST="pgvector"
+POSTGRES_PORT=5432
+POSTGRES_MAIN_DB="minirag"
+POSTGRES_USER="postgres"
+POSTGRES_PASSWORD="postgres_password"
+
+
+
+#===========================LLM Configuration==========================
+GENERATION_BACKEND="OPENAI"
+EMBEDDING_BACKEND="COHERE"
+
+OPENAI_API_KEY=""
+OPENAI_BASE_URL=""
+
+COHERE_API_KEY=""
+
+GENERATION_MODEL_ID=""
+EMBEDDING_MODEL_ID=""
+EMBEDDING_MODEL_SIZE=1024
+
+DEFAULT_INPUT_MAX_CHARACTERS=2048
+DEFAULT_OUTPUT_MAX_TOKENS=2048
+DEFAULT_TEMPERATURE=0.2
+
+
+
+#===========================VectorDB Configuration==========================
+VECTOR_DB_BACKEND_LITERALS=["QDRANT", "PGVECTOR"]
+VECTOR_DB_BACKEND="PGVECTOR"
+VECTOR_DB_PATH="qdrant_db"
+VECTOR_DB_DISTANCE_METHOD="cosine"
+VECTOR_DB_PGVEC_INDEX_THRESHOLD=100
+
+
+
+#===========================Template Configuration==========================
+PRIMARY_LANGUAGE="english"
+DEFAULT_LANGUAGE="english"

@@ -1,7 +1,27 @@
 services:
 
   # FastAPI application
+  fastapi:
+    build:
+      context: ..
+      dockerfile: docker/ragapp/Dockerfile
 
+    container_name: fastapi
+
+    ports:
+      - "8000:8000"
+
+    networks:
+      - backend
+   
+    restart: always
+
+    depends_on:
+      pgvector:
+        condition: service_healthy
+    
+    env_file:
+      - ./env/.env.app
 
   # Nginx Service
 
@@ -156,3 +176,4 @@ services:
       - backend
 
     restart: always
+
