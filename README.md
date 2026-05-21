@@ -297,11 +297,18 @@ uvicorn main:app --reload --host 0.0.0.0 --port 5000
 
 ## Deployment (AWS)
 
-This branch includes production deployment on AWS. The server hosts the application
-and restarts the service via systemd after each deployment.
+The full project is now deployed on AWS and live at:
+
+- Base URL: http://18.156.186.94
+- Swagger UI: http://18.156.186.94/docs
+
+This environment is fully operational. You can explore the routes, upload files,
+index data, and test the RAG flows directly from the Swagger UI.
+
+![Swagger UI](images/swagger.png)
 
 Key points:
-- The app is deployed to a AWS instance over SSH.
+- The app is deployed to an AWS instance over SSH.
 - The service is restarted with `systemctl` to pick up the latest code.
 
 ---
