@@ -13,8 +13,13 @@ class VectorDBProviderFactory:
 
     def create(self, provider: str):
         if provider == VectorDBEnums.QDRANT.value:
-            qdrant_db_client = self.base_controller.get_database_path(self.config.VECTOR_DB_PATH)
-            return QdrantDBProvider(db_client=qdrant_db_client, 
+            qdrant_db_url = self.config.VECTOR_DB_URL
+            qdrant_db_client = None
+            if not qdrant_db_url:
+                qdrant_db_client = self.base_controller.get_database_path(self.config.VECTOR_DB_PATH)
+
+            return QdrantDBProvider(db_client=qdrant_db_client,
+                                    db_url=qdrant_db_url,
                                     distance_method=self.config.VECTOR_DB_DISTANCE_METHOD,
                                     default_vector_size=self.config.EMBEDDING_MODEL_SIZE,
                                     index_threshold=self.config.VECTOR_DB_PGVEC_INDEX_THRESHOLD)

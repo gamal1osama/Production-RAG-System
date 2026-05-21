@@ -1,0 +1,44 @@
+name: Deploy Main Branch to Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.SSH_MAIN_HOST_IP }}
+          username: github_user
+          key: ${{ secrets.SSH_MAIN_PRIVATE_KEY }}
+          script: |
+            cd /home/github_user/workspace/Production-RAG-System
+            git checkout main
+            git pull origin main
+            sudo systemctl restart ragsys.service
+            echo "Waiting for the server to restart..."
+            sleep 20
+
+            for i in {1..6}; do
+              if ss -tuln | grep -q ":80"; then
+                echo "Port 80 is open and active!"
+                break
+              else
+                echo "Server is not responding yet. Retrying in 5 seconds..."
+                sleep 5
+              fi
+            done
+
+            if ! ss -tuln | grep -q ":80"; then
+              echo "Error: Port 80 is still not open after waiting."
+              exit 1
+            fi
+            

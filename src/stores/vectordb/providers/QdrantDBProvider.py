@@ -12,9 +12,10 @@ from uuid import UUID, uuid4, uuid5, NAMESPACE_URL
 
 class QdrantDBProvider(VectorDBInterface):
 
-    def __init__(self, db_client: str, default_vector_size: int=786, distance_method: str=None, index_threshold: int=100):
+    def __init__(self, db_client: str=None, db_url: str=None, default_vector_size: int=786, distance_method: str=None, index_threshold: int=100):
         
         self.db_client = db_client
+        self.db_url = db_url
         self.distance_method = None
         self.client = None
         self.default_vector_size = default_vector_size
@@ -28,6 +29,13 @@ class QdrantDBProvider(VectorDBInterface):
 
 
     async def connect(self):
+        if self.db_url:
+            self.client = QdrantClient(url=self.db_url)
+            return
+
+        if not self.db_client:
+            raise ValueError("Qdrant requires db_url or db_client path.")
+
         self.client = QdrantClient(path=self.db_client)
     
     async def disconnect(self):

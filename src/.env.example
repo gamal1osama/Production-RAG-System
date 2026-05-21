@@ -36,6 +36,7 @@ DEFAULT_TEMPERATURE=0.2
 #===========================VectorDB Configuration==========================
 VECTOR_DB_BACKEND_LITERALS=["QDRANT", "PGVECTOR"]
 VECTOR_DB_BACKEND="PGVECTOR"
+VECTOR_DB_URL="http://qdrant:6333"
 VECTOR_DB_PATH="qdrant_db"
 VECTOR_DB_DISTANCE_METHOD="cosine"
 VECTOR_DB_PGVEC_INDEX_THRESHOLD=100
