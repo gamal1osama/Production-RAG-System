@@ -19,5 +19,5 @@ async def welcome(app_settings: Settings = Depends(get_settings)):
         "message": "Hello World!",
         "app_name": app_name,
         "app_version": app_version,
-        "date_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        "date_&_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
