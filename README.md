@@ -1,5 +1,6 @@
 # Production RAG System 
 
+
 Production RAG System is a compact, production-minded Retrieval-Augmented Generation (RAG) service built with FastAPI. It supports document upload, chunking, vector indexing, semantic search, and answer generation using configurable LLM and vector backends.
 
 This README is intentionally long and explicit. It documents how each part of the codebase works, the project flow, technologies used, design patterns, and how the architecture supports a database migration with minimal refactoring.
