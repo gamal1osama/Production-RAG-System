@@ -323,6 +323,10 @@ We shipped a full monitoring stack in Docker to make the system easier to operat
 - **Qdrant health** (up status, version, collections, total vectors, recovery mode, cluster mode, memory breakdown, process threads/fds/mmaps, page fault rate)
 - **PostgreSQL Exporter health** (QPS, tuples fetched/returned/inserted/updated/deleted, cache hit ratio, conflicts/deadlocks, active connections)
 
+**PostgreSQL Database — Overview:** version & start time, current fetch/insert/update rates, max connections, CPU & memory (mean/last/max/min), open file descriptors, key server settings (shared_buffers, effective_cache, maintenance_work_mem, work_mem, max_wal_size), DB stats (active sessions, commits/rollbacks, update/insert/fetch/return/delete totals), cache hit rate and bgwriter/buffers
+
+**PostgreSQL Database — Detailed:** per-database timeseries for fetch/insert/return/delete (mean/last/total), idle sessions and locks, cache hit rate per DB, bgwriter/buffers & checkpoint stats, conflicts/deadlocks
+
 **Grafana dashboards**
 
 ![FastAPI Observability](images/FastAPI-Observability.png)
@@ -330,6 +334,8 @@ We shipped a full monitoring stack in Docker to make the system easier to operat
 ![Node Exporter Another Metrics](images/Node-Exporter-Another-Metrics.png)
 ![Qdrant Dashboard](images/Qdrant-Dashboard.png)
 ![PostgreSQL Exporter Dashboard](images/PostgreSQL-Exporter.png)
+![PostgreSQL Database](images/PostgreSQL-Database.png)
+![PostgreSQL Database 2](images/PostgreSQL-Database-2.png)
 
 ---
 

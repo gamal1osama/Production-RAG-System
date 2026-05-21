@@ -148,6 +148,8 @@ https://grafana.com/grafana/dashboards/24603-qdrant-prometheus-metrics-only-by-d
 
 https://grafana.com/grafana/dashboards/14114-postgres-overview/
 
+https://grafana.com/grafana/dashboards/9628-postgresql-database/
+
 
 ## Development Workflow
 
