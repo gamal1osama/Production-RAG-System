@@ -313,6 +313,25 @@ Key points:
 
 ---
 
+## Observability and Monitoring
+
+We shipped a full monitoring stack in Docker to make the system easier to operate and debug. The core idea is: FastAPI exposes metrics, Prometheus scrapes them, and Grafana visualizes the health of the app, the host, and the vector stack.
+
+**What we monitor**
+- **FastAPI API performance** (latencies, status codes, error rates)
+- **Host metrics** via Node Exporter (CPU, memory, disk, network)
+- **Qdrant health** and ingestion behavior
+- **PostgreSQL health** (connections, query latency, exporter metrics)
+
+**Grafana dashboards**
+
+![FastAPI Observability](images/FastAPI-Observability.png)
+![Node Exporter Full](images/Node-Exporter-Full.png)
+![Node Exporter Another Metrics](images/Node-Exporter-Another-Metrics.png)
+![Qdrant Dashboard](images/Qdrant-Dashboard.png)
+
+---
+
 ## CI/CD (GitHub Actions)
 
 The main branch is deployed using GitHub Actions:
