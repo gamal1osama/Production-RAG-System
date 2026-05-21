@@ -294,6 +294,33 @@ uvicorn main:app --reload --host 0.0.0.0 --port 5000
 
 ---
 
+## Deployment (AWS)
+
+This branch includes production deployment on AWS. The server hosts the application
+and restarts the service via systemd after each deployment.
+
+Key points:
+- The app is deployed to a AWS instance over SSH.
+- The service is restarted with `systemctl` to pick up the latest code.
+
+---
+
+## CI/CD (GitHub Actions)
+
+The main branch is deployed using GitHub Actions:
+
+- Workflow: [.github/workflows/deploy-main.yml](.github/workflows/deploy-main.yml)
+- Trigger: push to `main`
+- Deploy mechanism: SSH to the AWS instance, pull latest code, restart service
+
+Required secrets (configured in GitHub):
+- `SSH_MAIN_HOST_IP`
+- `SSH_MAIN_PRIVATE_KEY`
+
+Update these values if you change the server or user used for deployment.
+
+---
+
 ## Why This Project is Solid
 
 - **Layered architecture** minimizes coupling and keeps responsibilities clean.

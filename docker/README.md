@@ -153,6 +153,15 @@ https://grafana.com/grafana/dashboards/12485-postgresql-exporter/
 
 The FastAPI application is configured with hot-reloading. Any changes to the code in the `src/` directory will automatically reload the application.
 
+## Production Deployment (AWS)
+
+Production deployments run on AWS and are triggered by GitHub Actions:
+
+- Workflow: `.github/workflows/deploy-main.yml`
+- Action: SSH into the server, pull latest code, restart the systemd service
+
+This Docker setup is primarily for local development and monitoring.
+
 ## Troubleshooting
 
 ### Connection Errors
