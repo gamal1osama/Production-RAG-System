@@ -22,7 +22,7 @@ jobs:
           script: |
             cd /home/github_user/workspace/Production-RAG-System
             git checkout main
-            git pull origin main
+            git pull
             sudo systemctl restart ragsys.service
             echo "Waiting for the server to restart..."
             sleep 20
