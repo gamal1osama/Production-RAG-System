@@ -321,12 +321,22 @@ class PGVectorProvider(VectorDBInterface):
 
         query_vector = "[" + ",".join([str(x) for x in query_vector]) + "]"
 
+        vector_column = PgVectorTableScemaEnums.VECTOR.value
+        if self.distance_method == PgVectorDistanceMethodEnums.COSINE.value:
+            score_expr = f"1 - ({vector_column} <=> :query_vector)"
+        elif self.distance_method == PgVectorDistanceMethodEnums.DOT.value:
+            # pgvector returns negative inner product for <#>, so negate it to get a similarity score
+            score_expr = f"-({vector_column} <#> :query_vector)"
+        else:
+            # Fallback to negative L2 distance if the distance metric is unknown
+            score_expr = f"-({vector_column} <-> :query_vector)"
+
         async with self.db_client() as session:
             async with session.begin():
                 search_sql = sql_text(
                     "SELECT "
                     f"{PgVectorTableScemaEnums.TEXT.value} as text, "
-                    f"1 - ({PgVectorTableScemaEnums.VECTOR.value} <-> :query_vector) as score "
+                    f"{score_expr} as score "
                     f"FROM {collection_name} "
                     "ORDER BY score DESC "
                     "LIMIT :limit"
