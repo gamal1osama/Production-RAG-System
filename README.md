@@ -6,6 +6,7 @@ Production RAG System is a compact, production-minded Retrieval-Augmented Genera
 This README is intentionally long and explicit. It documents how each part of the codebase works, the project flow, technologies used, design patterns, and how the architecture supports a database migration with minimal refactoring.
 
 ---
+![project_architecture](images/project_architecture.svg)
 
 ## At a Glance
 
