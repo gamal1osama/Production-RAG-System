@@ -300,10 +300,10 @@ uvicorn main:app --reload --host 0.0.0.0 --port 5000
 
 The full project is now deployed on AWS and live at:
 
-- Base URL: http://rag-sys.duckdns.org
+- Base URL: http://rag-sys.duckdns.org/api/v1
 - Swagger UI: http://rag-sys.duckdns.org/docs
 
-Note: This replaced the old IP URLs (http://18.156.186.94 and http://18.156.186.94/docs).
+Note: This replaced the old IP URLs (http://18.156.186.94/api/v1 and http://18.156.186.94/docs).
 
 This environment is fully operational. You can explore the routes, upload files,
 index data, and test the RAG flows directly from the Swagger UI.
