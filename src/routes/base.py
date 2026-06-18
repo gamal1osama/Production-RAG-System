@@ -3,6 +3,11 @@ from helpers.config import get_settings, Settings
 from fastapi import FastAPI, APIRouter, Depends
 
 from datetime import datetime
+from time import sleep
+import logging
+
+
+logger = logging.getLogger("uvicorn.error")
 
 
 base_router = APIRouter(
@@ -21,3 +26,5 @@ async def welcome(app_settings: Settings = Depends(get_settings)):
         "app_version": app_version,
         "date_&_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
+
+

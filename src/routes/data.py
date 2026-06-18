@@ -12,6 +12,8 @@ from .schemas.data import ProcessRequest
 from fastapi import FastAPI, APIRouter, Depends, UploadFile, status, Request
 from fastapi.responses import JSONResponse
 
+from tasks.file_processing import process_files
+
 
 
 logger = logging.getLogger('uvicorn.error')
@@ -90,6 +92,56 @@ async def process_endpoint(request: Request, project_id: int, process_request: P
     chunk_size = process_request.chunk_size
     chunk_overlap = process_request.chunk_overlap
     do_reset = process_request.do_reset
+
+    task = process_files.delay(project_id=project_id,
+                               file_id=process_request.file_id,
+                               chunk_size=chunk_size,
+                               chunk_overlap=chunk_overlap,
+                               do_reset=do_reset)
+
+
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "signal":ResponseSignal.FILE_PROCESSING_SUCCESS.value,
+            "task_id": task.id
+        }
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     project_model = await ProjectModel.create_instance(db_client=request.app.db_client)
     project = await project_model.get_project_or_create(project_id=project_id)
