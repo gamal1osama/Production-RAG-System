@@ -1,5 +1,4 @@
 from helpers.config import get_settings, Settings
-from tasks.mail_service import send_report
 
 from fastapi import FastAPI, APIRouter, Depends
 
@@ -29,14 +28,3 @@ async def welcome(app_settings: Settings = Depends(get_settings)):
     }
 
 
-
-@base_router.get("/send_reports")
-async def send_reports(app_settings: Settings = Depends(get_settings)):
-    
-    task = send_report.delay(mail_wait_seconds=3)
-
-    return {
-        "success": "True",
-        "task_id": task.id
-    }
-    
