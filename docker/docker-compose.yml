@@ -176,7 +176,7 @@ services:
   # RabbitMQ Service
   rabbitmq:
 
-    image: rabbitmq:4.3.2-management-alpine
+    image: rabbitmq:4.1.2-management-alpine
     
     container_name: rabbitmq
 
