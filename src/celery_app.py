@@ -8,7 +8,10 @@ settings = get_settings()
 celery_app = Celery(
     "ragsys",
     broker=settings.CELERY_BROKER_URL,
-    backend=settings.CELERY_RESULT_BACKEND
+    backend=settings.CELERY_RESULT_BACKEND,
+    include=[
+        "tasks.mail_service",
+    ]
 )
 
 # Celery configuration update
@@ -31,10 +34,14 @@ celery_app.conf.update(
     worker_concurrency=settings.CELERY_WORKER_CONCURRENCY,
 
     # Connection settings for better reliability
-    broker_connnection_retry_on_startup=True,
-    broker_connnection_retry=True,
+    broker_connection_retry_on_startup=True,
+    broker_connection_retry=True,
     broker_connection_max_retries=10,
     worker_cancel_long_running_tasks_on_connection_loss=True,
+
+    task_routes={
+        "tasks.mail_service.send_report": {"queue": "mail_server_queue"},
+    }
 )
 
 
