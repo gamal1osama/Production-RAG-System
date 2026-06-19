@@ -34,3 +34,5 @@ class ResponseSignal(Enum):
     
     FILE_PROCESSING_STARTED = "file_processing_started"
     DATA_PUSHING_STARTED = "data_pushing_started"
+    PROCESS_AND_PUSH_WORKFLOW_STARTED = "process_and_push_workflow_started"
+    

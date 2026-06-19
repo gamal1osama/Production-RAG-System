@@ -2,8 +2,9 @@ from fastapi import FastAPI, APIRouter, Request, status
 from fastapi.responses import JSONResponse
 
 from tasks.data_indexing import index_data
+from tasks.process_and_push_workflow import process_and_push_workflow
 
-from .schemas.nlp import PushRequest, SearchRequest
+from .schemas.nlp import PushRequest, SearchRequest, ProcessAndPushRequest
 from models import ProjectModel, ChunkModel, ResponseSignal
 from controllers import NLPController
 from tqdm.auto import tqdm
@@ -34,6 +35,30 @@ async def index_project(project_id: int, request: Request, push_request: PushReq
         content={
             "signal": ResponseSignal.DATA_PUSHING_STARTED.value,
             "task_id": task.id
+        }
+    )
+
+
+@nlp_router.post("/index/process_and_push/{project_id}")
+async def process_and_index_project(project_id: int, request: Request, process_and_push_request: ProcessAndPushRequest):
+    
+    chunk_size = process_and_push_request.chunk_size
+    chunk_overlap = process_and_push_request.chunk_overlap
+    do_reset = process_and_push_request.do_reset
+
+    workflow_task = process_and_push_workflow.delay(project_id=project_id,
+                                           file_id=process_and_push_request.file_id,
+                                           chunk_size=chunk_size,
+                                           chunk_overlap=chunk_overlap,
+                                           do_reset=do_reset)
+
+
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "signal":ResponseSignal.PROCESS_AND_PUSH_WORKFLOW_STARTED.value,
+            "workflow_task_id": workflow_task.id
         }
     )
 
