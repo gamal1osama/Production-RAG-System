@@ -176,7 +176,10 @@ async def _process_files(task_instance,
         return {
             "signal":ResponseSignal.FILE_PROCESSING_SUCCESS.value,
             "no_files_processed": no_files,
-            "no_chunks_created": no_records
+            "no_chunks_created": no_records,
+
+            "project_id": project_id,  # to use them in the next task in the workflow
+            "do_reset": do_reset,      
         }
 
 
