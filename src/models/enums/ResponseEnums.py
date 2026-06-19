@@ -32,3 +32,5 @@ class ResponseSignal(Enum):
     ANSWERING_RAG_QUERY_FAILED = "answering_rag_query_failed"
     ANSWERING_RAG_QUERY_SUCCESS = "answering_rag_query_success"
     
+    FILE_PROCESSING_STARTED = "file_processing_started"
+    DATA_PUSHING_STARTED = "data_pushing_started"
