@@ -1,7 +1,5 @@
-from celery.app import autoretry
 from celery_app import celery_app, get_setup_utils
 
-from helpers.config import get_settings
 from controllers import ProcessController, NLPController
 from models import ResponseSignal, ProjectModel, ChunkModel, AssetModel
 from models.db_schemas import DataChunk
