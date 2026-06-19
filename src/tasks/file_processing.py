@@ -35,7 +35,7 @@ def process_files(self,
                   chunk_overlap: int = 20,
                   do_reset: int = 0 ):
     
-    asyncio.run(_process_files(self, project_id, 
+    return asyncio.run(_process_files(self, project_id, 
                                       file_id, chunk_size, 
                                       chunk_overlap, do_reset)) 
 
