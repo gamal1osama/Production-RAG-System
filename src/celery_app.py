@@ -104,7 +104,7 @@ celery_app.conf.update(
     beat_schedule={
         "cleanup_celery_executions_table": {
             "task": "tasks.maintenance.cleanup_celery_executions_table",
-            "schedule": 10.0,  # every 24 hour     
+            "schedule": 86400.0,  # every 24 hour     
             "args": (),  # no arguments
         }
     },
