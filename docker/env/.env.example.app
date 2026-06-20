@@ -50,8 +50,8 @@ DEFAULT_LANGUAGE="english"
 
 
 #===========================Celery Task Queue Configuration===================
-CELERY_BROKER_URL="amqp://ragsys_user:ragsys_rabbitmq_password@localhost:5672/ragsys_vhost"
-CELERY_RESULT_BACKEND="redis://:ragsys_redis_password@localhost:6379/0"
+CELERY_BROKER_URL="amqp://ragsys_user:ragsys_rabbitmq_password@rabbitmq:5672/ragsys_vhost"
+CELERY_RESULT_BACKEND="redis://:ragsys_redis_password@redis:6379/0"
 CELERY_TASK_SERIALIZER="json"
 CELERY_TASK_TIME_LIMIT=600
 CELERY_TASK_ACKS_LATE=true
