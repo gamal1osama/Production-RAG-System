@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     CELERY_TASK_TIME_LIMIT: int = 600
     CELERY_TASK_ACKS_LATE: bool = True
     CELERY_WORKER_CONCURRENCY: int = 2
+    CELERY_FLOWER_PASSWORD: str = None
 
     class Config:
         env_file = ".env"
