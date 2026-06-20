@@ -54,7 +54,7 @@ services:
     container_name: pgvector
   
     ports:
-      - "5400:5432"
+      - "5432:5432"
   
     volumes:
       - pgvector_data:/var/lib/postgresql
