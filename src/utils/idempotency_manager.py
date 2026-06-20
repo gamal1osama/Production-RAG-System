@@ -1,9 +1,9 @@
 import hashlib
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from models.db_schemas.ragsys.schemas.celery_task_execution import CeleryTaskExecution
 
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
 
 
@@ -116,3 +116,18 @@ class IdempotencyManager:
 
         return True, existing_task
         
+    
+    async def cleanup_old_tasks(self, time_retention: int = 86400) -> int:
+        
+        cutoff_time = datetime.utcnow() - timedelta(seconds=time_retention)
+
+        session = self.db_client()
+        try:
+            stmt = delete(CeleryTaskExecution).where(CeleryTaskExecution.created_at < cutoff_time)
+            result = await session.execute(stmt)
+           
+            await session.commit()
+            return result.rowcount
+        finally:
+            await session.close()
+            
