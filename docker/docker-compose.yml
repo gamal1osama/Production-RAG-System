@@ -361,4 +361,5 @@ volumes:
   rabbitmq_data:
   redis_data:
   celery_beat_data:
+  fastapi_data:
 
