@@ -29,7 +29,7 @@ class CeleryTaskExecution(SQLAlchemyBase):
     
 
     __table_args__ = (
-        Index('idx_task_name_args_hash', 'task_name', 'task_args_hash', unique=True),
+        Index('idx_task_name_id_args_hash', 'task_name', 'celery_task_id', 'task_args_hash', unique=True),
         Index('idx_task_execution_status', 'status'),
         Index('idx_task_execution_created_at', 'created_at'),
         Index('idx_celery_task_id', 'celery_task_id'),
