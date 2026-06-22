@@ -18,6 +18,7 @@ This README is intentionally long and explicit. It documents how each part of th
 
 ---
 
+
 ## Project Structure (by responsibility)
 
 ```
