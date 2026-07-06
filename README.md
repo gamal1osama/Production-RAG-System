@@ -1,20 +1,22 @@
 # Production RAG System 
 
 
-Production RAG System is a compact, production-minded Retrieval-Augmented Generation (RAG) service built with FastAPI. It supports document upload, chunking, vector indexing, semantic search, and answer generation using configurable LLM and vector backends.
+Production RAG System is a compact, production-minded Retrieval-Augmented Generation (RAG) service built with FastAPI. It supports document upload, chunking, vector indexing, semantic search, answer generation, and Celery-backed background processing using configurable LLM and vector backends.
 
 This README is intentionally long and explicit. It documents how each part of the codebase works, the project flow, technologies used, design patterns, and how the architecture supports a database migration with minimal refactoring.
 
 ---
 ![project_architecture](images/project_architecture.svg)
+![celery_architecture](images/celery_arch.svg)
 
 ## At a Glance
 
-- **Core goal:** upload files -> split into chunks -> index into vector DB -> search -> generate answers.
+- **Core goal:** upload files -> enqueue background work -> split into chunks -> index into vector DB -> search -> generate answers.
 - **API-first:** FastAPI endpoints under `/api/v1`.
 - **Pluggable backends:** LLM and vector DB are selected via factories and interfaces.
 - **Relational persistence:** PostgreSQL with SQLAlchemy + Alembic migrations.
 - **Local vector storage:** Qdrant local DB path (default).
+- **Background workers:** Celery workers handle long-running file processing, indexing, and workflow chaining.
 
 ---
 
@@ -29,13 +31,15 @@ src/
   models/                  # data-access layer + DB schemas
   stores/                  # external services (LLM + VectorDB)
   helpers/                 # app configuration
+	tasks/                   # Celery jobs for processing/indexing/maintenance
+	utils/                   # Celery task tracking and idempotency helpers
   assets/                  # file uploads + local vector DB storage
 ```
 
 ### Routing Layer (HTTP)
 - **[src/routes/base.py](src/routes/base.py)**: health/info endpoint.
-- **[src/routes/data.py](src/routes/data.py)**: upload files, process chunks.
-- **[src/routes/nlp.py](src/routes/nlp.py)**: index, search, answer.
+- **[src/routes/data.py](src/routes/data.py)**: upload files and enqueue file processing.
+- **[src/routes/nlp.py](src/routes/nlp.py)**: enqueue indexing/workflows, search, answer, and collection info.
 
 ### Controllers (Orchestration)
 - **[src/controllers/DataController.py](src/controllers/DataController.py)**: file validation + file path logic.
@@ -56,6 +60,44 @@ src/
 
 ---
 
+## Celery Worker Architecture
+
+The Celery work moves heavy file processing and indexing off the FastAPI request path. FastAPI acts as the producer, RabbitMQ is the broker, Celery workers execute jobs, and Redis stores task state and results.
+
+![Celery worker flow](images/celery_arch.svg)
+
+### What was developed
+
+The Celery work was built in two stages.
+
+1. **Stage 1: file processing worker**
+	- `POST /api/v1/data/process/{project_id}` now enqueues `tasks.file_processing.process_files` instead of processing inline.
+	- The task accepts `file_id`, `chunk_size`, `chunk_overlap`, and `do_reset`.
+	- It loads files from disk, splits them into chunks, and stores chunk records in PostgreSQL.
+	- When `do_reset=1`, it clears the vector collection and chunk rows before rebuilding.
+	- The task uses retries, late acknowledgments, and isolated async setup so it can run safely outside the web process.
+
+2. **Stage 2: indexing workflow, scheduling, and tracking**
+	- `tasks.data_indexing.index_data` pushes stored chunks into the vector DB in batches.
+	- `tasks.process_and_push_workflow.process_and_push_workflow` chains file processing and indexing into one background workflow.
+	- `POST /api/v1/nlp/index/push/{project_id}` starts the indexing task.
+	- `POST /api/v1/nlp/index/process_and_push/{project_id}` starts the full process-then-index workflow.
+	- `CeleryTaskExecution` tracks task name, task args hash, status, timestamps, Celery task id, and result.
+	- `IdempotencyManager` hashes task arguments, detects duplicate work, and cleans up old task records.
+	- `tasks.maintenance.cleanup_celery_executions_table` is scheduled by Celery Beat to remove stale task records.
+	- Flower provides task monitoring behind basic auth.
+
+### Celery design notes
+
+- **Broker:** RabbitMQ receives task messages from FastAPI.
+- **Result backend:** Redis stores task state and result payloads.
+- **Worker queues:** dedicated queues are used for file processing, indexing, workflow chaining, and maintenance.
+- **Reliability:** `task_acks_late=True`, retry policies, and task time limits reduce task loss and hanging workers.
+- **Concurrency:** worker concurrency is set to 2 in the environment defaults to fit limited-resource deployments.
+- **Isolation:** tasks create their own DB, LLM, and vector clients instead of reusing the web app process state.
+
+---
+
 ## End-to-End Flow (RAG lifecycle)
 
 ### 1) Upload a file
@@ -66,16 +108,22 @@ src/
 
 ### 2) Process files into chunks
 1. HTTP request to `/api/v1/data/process/{project_id}`.
-2. `ProcessController` loads files (TXT/PDF).
-3. `RecursiveCharacterTextSplitter` chunks data.
-4. Chunk metadata is stored in PostgreSQL (`chunks` table).
+2. FastAPI enqueues a Celery task and returns a `task_id` immediately.
+3. `tasks.file_processing.process_files` loads files (TXT/PDF), splits them into chunks, and stores chunk metadata in PostgreSQL (`chunks` table).
+4. If requested, the task also resets the related vector collection before rebuilding the chunks.
 
 ### 3) Index chunks into the vector DB
 1. HTTP request to `/api/v1/nlp/index/push/{project_id}`.
-2. `NLPController.index_into_db()` embeds chunks using selected embedding provider.
-3. Chunks are written into the configured vector DB collection.
+2. FastAPI enqueues `tasks.data_indexing.index_data` and returns a `task_id` immediately.
+3. The worker embeds chunks using the selected embedding provider.
+4. Chunks are written into the configured vector DB collection in batches.
 
-### 4) Search and answer
+### 4) Process and push as one workflow
+1. HTTP request to `/api/v1/nlp/index/process_and_push/{project_id}`.
+2. FastAPI enqueues `tasks.process_and_push_workflow.process_and_push_workflow`.
+3. Celery chains file processing and vector indexing so the project can rebuild both layers in one job.
+
+### 5) Search and answer
 1. HTTP request to `/api/v1/nlp/index/search/{project_id}` performs semantic search.
 2. HTTP request to `/api/v1/nlp/index/answer/{project_id}` builds a RAG prompt.
 3. Generation provider returns a final answer.
@@ -91,7 +139,8 @@ src/
 - **OpenAI / Cohere**: LLM + embeddings providers.
 - **LangChain**: document loading and text splitting.
 - **PyMuPDF**: PDF ingestion.
-- **Docker Compose**: local services (Postgres with pgvector, MongoDB legacy).
+- **Celery + RabbitMQ + Redis**: background task execution, queueing, and task state storage.
+- **Docker Compose**: local services (Postgres with pgvector, MongoDB legacy, Celery stack).
 
 ---
 
@@ -195,10 +244,15 @@ The power of a strong software base (clean layering, interfaces, and factories) 
 
 ## Docker Compose (local services)
 
-Docker provides two services:
+Docker provides multiple services:
 
 - **PostgreSQL (pgvector image)**: main relational database (`5432`).
 - **MongoDB**: legacy/experimental service (`27017`).
+- **RabbitMQ**: Celery broker (`5672`) and management UI (`15672`).
+- **Redis**: Celery result backend (`6379`).
+- **Celery worker**: executes file processing, indexing, and workflow jobs.
+- **Celery beat**: schedules periodic maintenance jobs.
+- **Flower**: Celery monitoring UI (`5555`).
 
 Use it for local development:
 
@@ -215,6 +269,8 @@ docker compose -f docker/docker-compose.yml up -d
 ```
 
 If you only use Postgres, MongoDB can be disabled.
+
+The Celery stack expects the worker and the FastAPI app to share the same mounted asset volume so uploads, chunk files, and task outputs are visible to both processes.
 
 ---
 
@@ -259,6 +315,7 @@ GENERATION_BACKEND, EMBEDDING_BACKEND
 OPENAI_API_KEY, COHERE_API_KEY
 VECTOR_DB_BACKEND_LITERALS, VECTOR_DB_BACKEND, VECTOR_DB_PATH, VECTOR_DB_DISTANCE_METHOD
 VECTOR_DB_PGVEC_INDEX_THRESHOLD
+CELERY_BROKER_URL, CELERY_RESULT_BACKEND, CELERY_TASK_SERIALIZER, CELERY_TASK_TIME_LIMIT, CELERY_TASK_ACKS_LATE, CELERY_WORKER_CONCURRENCY, CELERY_FLOWER_PASSWORD
 ```
 
 ---
@@ -271,6 +328,7 @@ VECTOR_DB_PGVEC_INDEX_THRESHOLD
 
 **NLP / Index**
 - `POST /api/v1/nlp/index/push/{project_id}`
+- `POST /api/v1/nlp/index/process_and_push/{project_id}`
 - `GET  /api/v1/nlp/index/info/{project_id}`
 - `POST /api/v1/nlp/index/search/{project_id}`
 - `POST /api/v1/nlp/index/answer/{project_id}`
@@ -364,6 +422,8 @@ Update these values if you change the server or user used for deployment.
 - **Layered architecture** minimizes coupling and keeps responsibilities clean.
 - **Strict contracts** via interfaces reduce risk when swapping providers.
 - **Async DB and I/O** for scalability and non-blocking performance.
+- **Background task isolation** keeps long-running file and indexing work off the request path.
+- **Task tracking and idempotency** make Celery retries and periodic cleanup safe.
 - **Schema migration discipline** with Alembic keeps data evolution safe.
 - **Config-driven behavior** makes environment and vendor changes predictable.
 
