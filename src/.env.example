@@ -57,3 +57,11 @@ CELERY_TASK_TIME_LIMIT=600
 CELERY_TASK_ACKS_LATE=true
 CELERY_WORKER_CONCURRENCY=2
 CELERY_FLOWER_PASSWORD="ragsys_flower_password"
+
+
+#===========================OCR Configuration==========================
+GEMINI_API_KEY=""
+GEMINI_MODEL_NAME="gemini-flash-latest"
+MISTRAL_API_KEY=""
+MISTRAL_MODEL_NAME="mistral-small-latest"
+OCR_PROVIDER="gemini"

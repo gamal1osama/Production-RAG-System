@@ -51,6 +51,13 @@ class Settings(BaseSettings):
     CELERY_WORKER_CONCURRENCY: int = 2
     CELERY_FLOWER_PASSWORD: str = None
 
+    # OCR Configuration
+    GEMINI_API_KEY: str = None
+    GEMINI_MODEL_NAME: str = "gemini-flash-latest"
+    MISTRAL_API_KEY: str = None
+    MISTRAL_MODEL_NAME: str = "mistral-small-latest"
+    OCR_PROVIDER: str = "gemini"
+
     class Config:
         env_file = ".env"
 
