@@ -1,7 +1,7 @@
 # Production RAG System 
 
 
-Production RAG System is a compact, production-minded Retrieval-Augmented Generation (RAG) service built with FastAPI. It supports document upload, chunking, vector indexing, semantic search, answer generation, and Celery-backed background processing using configurable LLM and vector backends.
+Production RAG System is a compact, production-minded Retrieval-Augmented Generation (RAG) service built with FastAPI. It supports document upload, chunking, OCR-enhanced PDF ingestion, vector indexing, semantic search, answer generation, and Celery-backed background processing using configurable LLM, OCR, and vector backends.
 
 This README is intentionally long and explicit. It documents how each part of the codebase works, the project flow, technologies used, design patterns, and how the architecture supports a database migration with minimal refactoring.
 
@@ -14,6 +14,7 @@ This README is intentionally long and explicit. It documents how each part of th
 - **Core goal:** upload files -> enqueue background work -> split into chunks -> index into vector DB -> search -> generate answers.
 - **API-first:** FastAPI endpoints under `/api/v1`.
 - **Pluggable backends:** LLM and vector DB are selected via factories and interfaces.
+- **OCR-aware ingestion:** PDF pages can be read natively or sent through Gemini/Mistral OCR for image blocks.
 - **Relational persistence:** PostgreSQL with SQLAlchemy + Alembic migrations.
 - **Local vector storage:** Qdrant local DB path (default).
 - **Background workers:** Celery workers handle long-running file processing, indexing, and workflow chaining.
@@ -55,8 +56,30 @@ src/
 
 ### Stores (External Services)
 - **LLM providers:** OpenAI, Cohere via **[LLMProviderFactory](src/stores/llm/LLMProviderFactory.py)**.
+- **OCR providers:** Gemini and Mistral via **[OCRProviderFactory](src/stores/ocr/OCRProviderFactory.py)**.
 - **Vector DB providers:** Qdrant via **[VectorDBProviderFactory](src/stores/vectordb/VectorDBProviderFactory.py)**.
 - **Template rendering:** prompt templates via **[TemplateParser](src/stores/llm/templates/template_parser.py)**.
+
+---
+
+## OCR-Enhanced PDF Ingestion
+
+PDF loading now uses **[src/utils/PDFLoader.py](src/utils/PDFLoader.py)** as a drop-in replacement for the standard PyMuPDF loader.
+
+How it works:
+
+1. Each page is segmented into text blocks and image blocks.
+2. Native text blocks are extracted directly and cleaned locally.
+3. Image blocks are rendered to PIL images and sent to the configured OCR provider.
+4. OCR output is cleaned and merged back into the page text in reading order.
+5. The resulting page content is returned in the same `Document` structure expected by the rest of the pipeline.
+
+Supported OCR backends:
+
+- **Gemini** for multimodal extraction.
+- **Mistral** for vision-capable chat extraction.
+
+The active provider is selected with `OCR_PROVIDER`, and the corresponding API key and model name are configured through the environment.
 
 ---
 
@@ -110,7 +133,8 @@ The Celery work was built in two stages.
 1. HTTP request to `/api/v1/data/process/{project_id}`.
 2. FastAPI enqueues a Celery task and returns a `task_id` immediately.
 3. `tasks.file_processing.process_files` loads files (TXT/PDF), splits them into chunks, and stores chunk metadata in PostgreSQL (`chunks` table).
-4. If requested, the task also resets the related vector collection before rebuilding the chunks.
+4. PDF pages are extracted with native text first, then OCR is applied to image regions when present.
+5. If requested, the task also resets the related vector collection before rebuilding the chunks.
 
 ### 3) Index chunks into the vector DB
 1. HTTP request to `/api/v1/nlp/index/push/{project_id}`.
@@ -138,7 +162,8 @@ The Celery work was built in two stages.
 - **Qdrant**: vector store (local path client).
 - **OpenAI / Cohere**: LLM + embeddings providers.
 - **LangChain**: document loading and text splitting.
-- **PyMuPDF**: PDF ingestion.
+- **PyMuPDF**: PDF ingestion and page/block rendering.
+- **Gemini / Mistral OCR**: image-region text extraction for scanned or image-only PDF content.
 - **Celery + RabbitMQ + Redis**: background task execution, queueing, and task state storage.
 - **Docker Compose**: local services (Postgres with pgvector, MongoDB legacy, Celery stack).
 
@@ -315,6 +340,7 @@ GENERATION_BACKEND, EMBEDDING_BACKEND
 OPENAI_API_KEY, COHERE_API_KEY
 VECTOR_DB_BACKEND_LITERALS, VECTOR_DB_BACKEND, VECTOR_DB_PATH, VECTOR_DB_DISTANCE_METHOD
 VECTOR_DB_PGVEC_INDEX_THRESHOLD
+GEMINI_API_KEY, GEMINI_MODEL_NAME, MISTRAL_API_KEY, MISTRAL_MODEL_NAME, OCR_PROVIDER
 CELERY_BROKER_URL, CELERY_RESULT_BACKEND, CELERY_TASK_SERIALIZER, CELERY_TASK_TIME_LIMIT, CELERY_TASK_ACKS_LATE, CELERY_WORKER_CONCURRENCY, CELERY_FLOWER_PASSWORD
 ```
 
