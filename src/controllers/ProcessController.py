@@ -1,11 +1,13 @@
 from .BaseController import BaseController
 from .ProjectController import ProjectController
 from models import ProcessingEnums
+from utils.PDFLoader import PDFLoader
 
+
+from langchain_community.document_loaders import TextLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 import os
 
-from langchain_community.document_loaders import TextLoader, PyMuPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
 class ProcessController(BaseController):
@@ -32,7 +34,7 @@ class ProcessController(BaseController):
             return TextLoader(file_path=file_path, encoding='utf-8') # we use utf-8 encoding because if the file contain arabic caracters
         
         elif file_ext == ProcessingEnums.PDF.value:
-            return PyMuPDFLoader(file_path=file_path)
+            return PDFLoader(file_path=file_path)
         
         return None
     
