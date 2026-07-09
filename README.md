@@ -7,7 +7,6 @@ This README is intentionally long and explicit. It documents how each part of th
 
 ---
 ![project_architecture](images/project_architecture.svg)
-![celery_architecture](images/celery_arch.svg)
 
 ## At a Glance
 
