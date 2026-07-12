@@ -1,7 +1,7 @@
-# Production RAG System 
+# Production Modular RAG System 
 
 
-Production RAG System is a compact, production-minded Retrieval-Augmented Generation (RAG) service built with FastAPI. It supports document upload, chunking, OCR-enhanced PDF ingestion, vector indexing, semantic search, answer generation, and Celery-backed background processing using configurable LLM, OCR, and vector backends.
+Production Modular RAG System is a compact, production-minded Retrieval-Augmented Generation (RAG) service built with FastAPI. It supports document upload, chunking, OCR-enhanced PDF ingestion, vector indexing, semantic search, answer generation, and Celery-backed background processing using configurable LLM, OCR, and vector backends.
 
 This README is intentionally long and explicit. It documents how each part of the codebase works, the project flow, technologies used, design patterns, and how the architecture supports a database migration with minimal refactoring.
 
